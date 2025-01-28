@@ -1,13 +1,22 @@
 from rest_framework import generics, permissions
-from .models import Profile, Group, Post
-from .serializers import ProfileSerializer, GroupSerializer, PostSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 
+from .serializers import ProfileSerializer, GroupSerializer, PostSerializer
+from .pagination import CustomPagination
+from .models import Profile, Group, Post
 
 # Profiles
 class ProfileListView(generics.ListAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     permission_classes = [permissions.IsAuthenticated]  # Authenticated users only
+    pagination_class = CustomPagination 
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['nickname', 'privacy_settings']  # Exact matches
+    search_fields = ['bio', 'goals']  # Partial matches
+    ordering_fields = ['created_at']  # Sorting options
+    ordering = ['-created_at']  # Default ordering
 
 
 class ProfileDetailView(generics.RetrieveUpdateAPIView):
@@ -21,6 +30,9 @@ class GroupListView(generics.ListCreateAPIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAuthenticated]  # Authenticated users only
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['category']  # Exact matches
+    search_fields = ['name', 'description']  # Partial matches
 
 
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
